@@ -1,0 +1,188 @@
+.ChatPage {
+    .ChatHeader {
+        position: relative;
+        z-index: 2;
+        flex: 0 0 auto;
+    }
+
+    .name {
+        color: inherit !important;
+    }
+
+    #chat-input {
+        color: inherit;
+    }
+
+    .ChatPage-main {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    &--fullscreen,
+    .ChatPage-shell {
+        display: flex;
+        flex-direction: column;
+        height: 100dvh;
+        width: 100%;
+        max-width: 100%;
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        box-sizing: border-box;
+    }
+
+    .ChatViewport {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .ChatViewport .wrapper {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .ChatViewport .ChatInput {
+        flex: 0 0 auto;
+        display: flex;
+        width: 100%;
+        position: relative;
+        bottom: auto;
+    }
+}
+
+.App--chat {
+    padding-bottom: 0;
+}
+
+.App--live-chat-room {
+    #header,
+    .App-header,
+    .App-navigation,
+    .App-footer,
+    .IndexPage-nav,
+    .sideNav {
+        display: none !important;
+    }
+
+    .App-content,
+    .App-content > .container,
+    .App-page {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: none !important;
+    }
+
+    .ChatPage--fullscreen {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100dvh;
+        z-index: 200;
+        background: var(--body-bg, #fff);
+    }
+}
+
+.LiveChatsPage {
+    max-width: 760px;
+    margin: 1.5rem auto;
+    padding: 0 1rem;
+
+    &-title {
+        font-size: 1.75rem;
+        margin-bottom: 1.25rem;
+    }
+
+    &-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    &-card {
+        margin: 0 0 0.75rem;
+    }
+
+    &-cardLink {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        min-height: 44px;
+        padding: 14px 16px;
+        border: 1px solid var(--control-bg, fade(@muted-color, 25%));
+        border-radius: var(--border-radius, 8px);
+        background: var(--body-bg, transparent);
+        text-decoration: none;
+        color: inherit;
+        box-sizing: border-box;
+
+        &:hover,
+        &:focus {
+            border-color: var(--primary-color, @primary-color);
+        }
+    }
+
+    &-primary {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        margin-bottom: 4px;
+    }
+
+    &-cardTitle {
+        flex: 1 1 auto;
+        min-width: 0;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    &-time {
+        flex: 0 0 auto;
+        font-size: 0.85rem;
+        color: var(--muted-color, @muted-color);
+        white-space: nowrap;
+    }
+
+    &-secondary {
+        min-width: 0;
+    }
+
+    &-preview {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 0.9rem;
+        color: var(--muted-color, @muted-color);
+    }
+
+    &-empty {
+        color: var(--muted-color, @muted-color);
+    }
+}
+
+.LiveConversationView {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    flex: 1 1 auto;
+    height: 100%;
+
+    &--embedded {
+        width: 100%;
+    }
+
+    &--unavailable {
+        padding: 1.5rem;
+        color: var(--muted-color, @muted-color);
+    }
+}

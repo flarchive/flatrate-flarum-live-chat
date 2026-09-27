@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "dependencies": {
+    "centrifuge": "^5.3.4",
+    "flarum-webpack-config": "0.1.0-beta.10",
+    "webpack": "^4.26.0",
+    "webpack-cli": "^4.9.1"
+  },
+  "devDependencies": {
+    "husky": "^4.2.5",
+    "prettier": "2.0.2"
+  },
+  "scripts": {
+    "dev": "webpack --mode development --watch",
+    "build": "webpack --mode production",
+    "format": "prettier --write src",
+    "format-check": "prettier --check src",
+    "test": "node tests/realtime-client.test.js && node tests/check-unreaded-gate.test.js && node tests/message-fetch-lifecycle.test.js && node tests/live-chat-ui-contract.test.js && node tests/messaging-provider.test.js && node --test tests/forum-messaging-005ui.test.js tests/forum-messaging-006ui.test.js tests/forum-messaging-007ui.test.js tests/forum-messaging-007ui-rendered.test.js tests/forum-messaging-008ui.test.js && node tests/forum-messaging-009ui.test.js && node tests/forum-messaging-010ui.test.js && node --test tests/forum-messaging-011ui.test.js && node tests/live-main-001a.test.js && node --test tests/tracked-dist-freshness.test.js"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run format"
+    }
+  }
+}

@@ -1,0 +1,583 @@
+.ChatViewport {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    position: relative;
+
+    .ChatInput {
+        flex: 0 0 auto;
+    }
+
+    .UserMention {
+        .user-select(none);
+
+        a {
+            color: #697a96 !important;
+        }
+
+        display: inline-block;
+        color: #697a96 !important;
+        border-radius: 4px;
+        padding: 2px 5px;
+        margin: 2px 3px;
+        border: 0 !important;
+    }
+
+    .UserMention:hover {
+        a {
+            color: #ff94c1 !important;
+        }
+        color: #ff94c1 !important;
+    }
+
+    .scroller,
+    .ChatViewport-scroller {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        min-height: 44px;
+        padding: 0 14px;
+        position: absolute;
+        right: 16px;
+        bottom: 64px;
+        border: 0;
+        background: var(--primary-color, @primary-color);
+        color: #fff;
+        border-radius: 999px;
+        font-size: 14px;
+        line-height: 1;
+        cursor: pointer;
+        .transition(opacity .1s);
+        opacity: 0.92;
+
+        &:hover,
+        &:focus {
+            opacity: 1;
+        }
+
+        i {
+            font-size: 14px;
+        }
+    }
+
+    .wrapper {
+        flex: 1 1 auto;
+        min-height: 0;
+        height: auto;
+        overflow-y: auto;
+        overflow-x: hidden;
+
+        .welcome {
+            margin: auto;
+            margin-top: 150px;
+            text-align: center;
+
+            h1 {
+                display: block;
+                font-size: 25pt;
+                margin: 5px;
+            }
+
+            span {
+                display: block;
+                color: #8a8a8a;
+            }
+        }
+
+        .message-wrapper,
+        .message-wrapper--loading {
+            display: block;
+            padding: 8px 12px 8px 16px;
+            position: relative;
+            background: transparent;
+
+            &.editing {
+
+                .avatar-wrapper,
+                .name,
+                .labels,
+                .message,
+                .timestamp {
+                    opacity: 0.6
+                }
+            }
+
+            &.hidden {
+
+                .avatar-wrapper,
+                .name,
+                .labels,
+                .message,
+                .timestamp {
+                    opacity: 0.3
+                }
+            }
+
+            &.deleted {
+                display: none;
+            }
+
+            .avatar-wrapper {
+                position: absolute;
+
+                .avatar {
+                    width: 26px;
+                    height: 26px;
+                    border-radius: 26px;
+                    font-size: 13px;
+                    line-height: 26px;
+                    cursor: pointer;
+                }
+            }
+
+            span[data-name]:hover:after {
+                content: attr(data-name);
+                padding: 4px 8px;
+                color: #FFF;
+                position: absolute;
+                white-space: nowrap;
+                z-index: 20px;
+                -moz-border-radius: 5px;
+                -webkit-border-radius: 5px;
+                border-radius: 5px;
+                -moz-box-shadow: 0px 0px 4px #222;
+                -webkit-box-shadow: 0px 0px 4px #222;
+                box-shadow: 0px 0px 4px #222;
+            }
+
+            .event {
+                min-height: 25px;
+                color: #434f58;
+                text-align: center;
+                padding: 5px;
+                line-height: 1.5;
+                margin-right: 100px;
+
+                i {
+                    vertical-align: text-bottom;
+                    font-size: 14pt;
+                    padding: 0px 2px;
+                }
+
+                .timestamp {
+                    color: #7c7c7c;
+                    position: absolute;
+                    right: 8px;
+                    line-height: 2;
+                    top: 7px;
+                    width: 100px;
+                    text-align: right;
+                    font-size: 12px;
+                    white-space: nowrap;
+                }
+
+                .chat-title {
+                    max-width: 150px;
+                    text-overflow: ellipsis;
+                    display: inline-block;
+                    white-space: nowrap;
+                }
+            }
+
+            .message-block {
+                margin-left: 35px;
+                position: relative;
+
+                .message {
+                    padding: 5px 0px;
+                    word-break: break-word;
+                    white-space: normal;
+                    min-height: 30px;
+
+                    img {
+                        max-height: 290px;
+                    }
+
+                    a {
+                        cursor: pointer;
+                        color: #2b384c;
+                        text-decoration: none;
+                        font-weight: 600;
+                    }
+                }
+
+                &:hover {
+                    .ButtonGroup {
+                        opacity: 1 !important;
+                    }
+                }
+
+                .toolbar {
+                    position: relative;
+
+                    .name {
+                        display: inline;
+                        color: var(--heading-color, @heading-color);
+                        font-weight: 600;
+                        cursor: pointer;
+                    }
+
+                    .labels {
+                        display: inline;
+                        opacity: 1.0;
+
+                        .icon {
+                            display: inline-block;
+                            color: #7c7c7c;
+                            padding: 0px 5px;
+
+                            span {
+                                font-size: 9pt;
+                            }
+                        }
+                    }
+
+                    .right {
+                        display: inline;
+                        right: 0;
+                        position: absolute;
+
+
+                        .edit {
+                            display: inline;
+                            padding: 0px 5px;
+
+                            .ButtonGroup {
+                                width: unset;
+                            }
+
+                            .ButtonGroup:not(.open) {
+                                opacity: 0;
+                            }
+
+                            .Button:hover,
+                            .Button:focus {
+                                background: #d2d2d2;
+                                color: #666666;
+                            }
+
+                            .open>.Button {
+                                background: #d2d2d2 !important;
+                                color: #666666 !important;
+                            }
+
+                            .Button--icon {
+                                width: 24px !important;
+                                height: 24px !important;
+                                padding: 0;
+                                text-align: center;
+                            }
+                        }
+
+                        .timestamp {
+                            display: inline;
+                            color: var(--muted-color, @muted-color);
+                            cursor: pointer;
+                            padding-right: 5px;
+                            text-align: right;
+                            white-space: nowrap;
+                            font-size: 12px;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+                    }
+                }
+
+                .message p,
+                .message div:not(.LoadingIndicator) {
+                    display: inline;
+                    margin: 0;
+                    padding: 0;
+                }
+            }
+        }
+    }
+
+}
+
+// FORUM-MESSAGING-008UI — grouped message identity + mirrored metadata.
+// Presentation groups own avatar/nickname/timestamp once; ChatMessage is content-only under V2.
+// Specificity must beat legacy absolute geometry under .ChatViewport .wrapper .message-wrapper …
+.ChatViewport.ChatViewport--messagesV2 {
+    .wrapper {
+        .ChatMessageGroup {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px 12px;
+            margin: 0;
+            gap: 4px;
+        }
+
+        .ChatMessageGroup + .ChatMessageGroup,
+        .ChatMessageGroup + .message-wrapper,
+        .message-wrapper + .ChatMessageGroup {
+            margin-top: 12px;
+        }
+
+        .ChatMessageGroup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            width: 100%;
+            min-width: 0;
+            margin: 0 0 4px;
+        }
+
+        .ChatMessageGroup-identity {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .ChatMessageGroup-name {
+            display: block;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            color: var(--heading-color, @heading-color);
+            font-weight: 600;
+            cursor: pointer;
+            line-height: 1.2;
+        }
+
+        .ChatMessageGroup-time {
+            flex: 0 0 auto;
+            white-space: nowrap;
+            color: var(--muted-color, @muted-color);
+            font-size: 12px;
+            line-height: 1.2;
+            order: 0;
+        }
+
+        .ChatMessageGroup-avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex: 0 0 28px;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            margin: 0;
+            overflow: visible;
+        }
+
+        .ChatMessageGroup-avatar > span,
+        .ChatMessageGroup-avatar .Avatar,
+        .ChatMessageGroup-avatar .avatar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            text-align: center;
+            line-height: 1;
+            border-radius: 50%;
+            font-size: 13px;
+        }
+
+        .ChatMessageGroup-avatar img {
+            display: block;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .ChatMessageGroup-messages {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            min-width: 0;
+            align-items: flex-start;
+        }
+
+        // Incoming: avatar + name | time
+        .ChatMessageGroup:not(.ChatMessageGroup--own) {
+            .ChatMessageGroup-header {
+                flex-direction: row;
+            }
+
+            .ChatMessageGroup-identity {
+                order: 1;
+                justify-content: flex-start;
+            }
+
+            .ChatMessageGroup-time {
+                order: 2;
+            }
+
+            .ChatMessageGroup-messages {
+                align-items: flex-start;
+                padding-left: 36px; // avatar (28) + gap (8)
+            }
+        }
+
+        // Outgoing: time | name + avatar (mirrored)
+        .ChatMessageGroup--own {
+            .ChatMessageGroup-header {
+                flex-direction: row;
+            }
+
+            .ChatMessageGroup-identity {
+                order: 2;
+                justify-content: flex-end;
+                flex: 0 1 auto;
+            }
+
+            .ChatMessageGroup-time {
+                order: 1;
+                margin-right: auto;
+            }
+
+            .ChatMessageGroup-messages {
+                align-items: flex-end;
+                padding-right: 36px;
+            }
+        }
+
+        // Grouped ChatMessage rows: content only; defeat legacy absolute geometry.
+        .message-wrapper.message-wrapper--grouped {
+            display: block;
+            position: relative;
+            width: auto;
+            max-width: ~"min(86%, 560px)";
+            padding: 0;
+            margin: 0;
+            text-align: left;
+
+            .ChatMessage-content--grouped {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: stretch;
+                margin: 0;
+                margin-left: 0;
+                min-width: 0;
+                max-width: 100%;
+            }
+
+            .ChatMessage-groupedRow {
+                display: flex;
+                align-items: center;
+                gap: 4px;
+                max-width: 100%;
+                min-width: 0;
+            }
+
+            .ChatMessage-moderation {
+                flex: 0 0 auto;
+                align-self: center;
+            }
+
+            .ChatMessage-moderationToggle {
+                width: 32px;
+                min-width: 32px;
+                height: 32px;
+                min-height: 32px;
+                margin: 0;
+                padding: 0;
+                font-size: 16px;
+                color: var(--muted-color, @muted-color);
+                background: transparent !important;
+                box-shadow: none !important;
+                border: 0 !important;
+            }
+
+            .labels {
+                position: static;
+                display: inline-flex;
+                margin: 0 0 2px;
+            }
+
+            .message {
+                display: block;
+                width: fit-content;
+                max-width: 100%;
+                min-width: 0;
+                text-align: left;
+                padding: 8px 12px;
+                border-radius: 14px;
+                box-sizing: border-box;
+                word-break: normal;
+                overflow-wrap: anywhere;
+                white-space: normal;
+                min-height: 0;
+                position: static;
+            }
+
+            .message .actualMessage,
+            .message .censored {
+                display: block;
+                max-width: 100%;
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+        }
+
+        .ChatMessageGroup:not(.ChatMessageGroup--own) {
+            .message-wrapper.message-wrapper--grouped .ChatMessage-groupedRow {
+                flex-direction: row;
+            }
+        }
+
+        .ChatMessageGroup--own .message-wrapper.message-wrapper--grouped {
+            .ChatMessage-groupedRow {
+                flex-direction: row-reverse;
+            }
+
+            .message {
+                background: mix(@primary-color, @control-bg, 18%);
+            }
+
+            .ChatMessage-content--grouped {
+                align-items: flex-end;
+            }
+
+            .message {
+                // keep left-aligned text inside right-aligned bubble
+                text-align: left;
+            }
+        }
+
+        // Neutralize legacy absolute avatar / toolbar for any remaining V2 own wrappers.
+        .message-wrapper.message-wrapper--own:not(.message-wrapper--grouped) {
+            .avatar-wrapper {
+                position: relative;
+                inset: auto;
+                margin: 0;
+            }
+
+            .message-block {
+                margin-left: 0;
+            }
+
+            .toolbar .right {
+                position: static;
+                inset: auto;
+            }
+        }
+    }
+}
+
+@media (min-width: @screen-tablet) {
+    .ChatViewport.ChatViewport--messagesV2 .wrapper .message-wrapper.message-wrapper--grouped {
+        max-width: ~"min(76%, 560px)";
+    }
+}
+
+@media (min-width: @screen-desktop) {
+    .ChatViewport.ChatViewport--messagesV2 .wrapper .message-wrapper.message-wrapper--grouped {
+        max-width: ~"min(70%, 560px)";
+    }
+}

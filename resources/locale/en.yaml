@@ -1,0 +1,170 @@
+flatrate-live-chat:
+  forum:
+    nav:
+      live_chats: Live Chat
+    live_chats:
+      title: Live Chat
+      general_label: FlatRate.wiki Live
+      empty: Live Chat isn't available yet.
+      new_messages: New messages
+      jump_latest: Jump to latest
+      error: Could not load live chats.
+      retry: Try again
+      unavailable: This live chat isn't available.
+      meta_live_public: Live · Public
+      meta_group_private: Group · Private
+    realtime_not_found: Realtime is unavailable until Centrifugo is configured.
+    index:
+      chat_link: Chat
+    toolbar:
+      title: Chat
+      enable_sounds: Enable sounds
+      disable_sounds: Disable sounds
+      enable_notifications: Enable notifications
+      disable_notifications: Disable notifications
+      minimize: Minimize
+      maximize: Maximize
+      more: More
+      back: Back
+      chat:
+        settings: Room settings
+        info: Room info
+    chat:
+      welcome:
+        header: Welcome to Live Chat
+        subheader: Choose a room to join the conversation.
+      send: Send message
+      cancel_edit: Cancel
+      moder: Moderator
+      kick: Kick
+      leave: Leave
+      rejoin: Rejoin
+      edit_modal:
+        title: Chat settings
+        moderator:
+          got: You just got Moderator rights in the chat {chatname}!
+          lost: You just lost Moderator rights in the chat {chatname}.
+        form:
+          title:
+            label: Chat name
+            validator: At least 1 symbol
+          color:
+            label: Color
+            validator: In hex format
+          icon:
+            label: => core.ref.icon
+            validator: => core.ref.icon_text
+          users:
+            edit: Select and edit users
+          leave: Leave the chat
+          return: Enter the chat
+          delete:
+            title: Are you sure you want to delete this chat?
+            desc: Copy and paste the chat name to continue
+            placeholder: Chat name
+            button: Delete chat
+        search:
+          placeholder: Search Users
+          failed: No matching users found
+          invited: Invited
+        save_button: => core.ref.save_changes
+      list:
+        pin: Pin panel
+        unpin: Unpin panel
+        placeholder: Filter Chats
+        preview:
+          empty: No messages
+          kind_live: Live
+          kind_group: Group
+          privacy_public: Public
+          privacy_private: Private
+        add_modal:
+          title: Select users
+          chat: Chat
+          channel: Channel
+          create:
+            chat: Create a new chat
+            channel: Create a new channel
+          alerts:
+            exists: You can't create another PM with this user!
+          form:
+            title:
+              chat: Chat name
+              channel: Channel name
+              validator: At least 1 symbol
+            icon:
+              label: => core.ref.icon
+              validator: => core.ref.icon_text
+            color:
+              label: => flatrate-live-chat.forum.chat.edit_modal.form.color.label
+              validator: => flatrate-live-chat.forum.chat.edit_modal.form.color.validator
+            users: Selected users
+          search:
+            placeholder: Search Users
+            failed: No matching users found
+            invited: Invited
+            more_results: And {more_results} more...
+      placeholder: Type a message…
+      message:
+        actions:
+          hide: Hide
+          resend: Resend
+          remove: Remove message
+        censored: Log in to see this message!
+        deleted: deleted by
+        deleted_forever: deleted forever by
+        you: You
+        type:
+          url: URL
+          event: Event
+          code: <Code />
+        events:
+          chat:
+            created: "{creatorname} created {chatname} and invited {usernames}"
+          pm:
+            created: "{creatorname} created chat with {username}"
+          channel:
+            created: "{creatorname} created channel {chatname}"
+          title:
+            edited: "{editorname} changed chat's title from {old} to {new}"
+          icon:
+            edited: "{editorname} changed chat's icon from {old} to {new}"
+          color:
+            edited: "{editorname} changed chat's color from {old} to {new}"
+          users:
+            invited: "{editorname} invited {usernames}"
+            kicked: "{editorname} kicked {usernames}"
+            invited_kicked: "{editorname} invited {invitednames} and kicked {kickednames}"
+          self:
+            leaved: "{username} left the chat"
+            entered: "{username} entered the chat"
+    errors:
+      unauthenticated: Only registered users can use the chat
+      chatdenied: Your user group is not allowed to write messages
+      removed: You were removed from the chat
+  admin:
+    permissions:
+      post: Post chat messages
+      edit: Edit chat messages
+      delete: Delete chat messages
+      enabled: Enable chat
+      create:
+        chat: Start chats
+        channel: Start channels
+      moderate:
+        delete: Delete chat messages
+        vision: See deleted messages
+
+    settings:
+      title: Chat settings
+      charlimit: Maximum characters in the message
+      floodgate:
+        title: Antiflood
+        number: Number of messages in a row
+        time: Over a period
+      display:
+        title: Display
+        minimize: Minimize initially
+        censor: Censoring messages for unauthorized users
+      live_chats_navigation: Show Live Chat navigation
+      general_live_enabled: Enable General Live (Admin kill switch)

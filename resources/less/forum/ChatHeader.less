@@ -1,0 +1,64 @@
+.ChatHeader {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 48px;
+    box-sizing: border-box;
+    padding: 0 4px;
+    background: var(--control-bg, @control-bg);
+    color: var(--heading-color, @heading-color);
+    border-bottom: 1px solid var(--control-bg, fade(@muted-color, 20%));
+    position: relative;
+    z-index: 1;
+
+    .ChatHeader-back {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        color: inherit;
+        text-decoration: none;
+        flex: 0 0 auto;
+
+        &:hover,
+        &:focus {
+            color: var(--link-color, @primary-color);
+        }
+    }
+
+    .ChatHeader-title {
+        flex: 1 1 auto;
+        min-width: 0;
+        margin: 0 8px;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.3;
+        color: inherit;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ChatHeader-overflow {
+        flex: 0 0 auto;
+        margin-left: auto;
+    }
+
+    .ChatHeader-overflowToggle {
+        min-width: 44px;
+        min-height: 44px;
+        color: inherit;
+
+        .Button-label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+        }
+    }
+}

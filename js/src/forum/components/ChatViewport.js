@@ -1,0 +1,394 @@
+import Component from 'flarum/Component';
+import LoadingIndicator from 'flarum/components/LoadingIndicator';
+
+import ChatInput from './ChatInput';
+import ChatMessage from './ChatMessage';
+import ChatMessageGroup from './ChatMessageGroup';
+import ChatEventMessage from './ChatEventMessage';
+import ChatWelcome from './ChatWelcome';
+import Message from '../models/Message';
+import timedRedraw from '../utils/timedRedraw';
+import { processVisibleUnread } from '../utils/processVisibleUnread';
+import { startInitialHistoryFetch, settleInitialHistoryFetch } from '../utils/chatMessagesFetchLifecycle';
+import { groupChatMessages } from '../utils/groupChatMessages';
+
+export default class ChatViewport extends Component {
+    oninit(vnode) {
+        super.oninit(vnode);
+
+        this.model = this.attrs.chatModel;
+        if (this.model) {
+            this.state = app.chat.getViewportState(this.model);
+        }
+    }
+
+    oncreate(vnode) {
+        super.oncreate(vnode);
+        this.loadChat();
+    }
+
+    onupdate(vnode) {
+        super.onupdate(vnode);
+
+        // this.attrs is broken in onupdate hook
+        const model = vnode.attrs.chatModel;
+
+        if (model !== this.model) {
+            this.model = model;
+            if (this.model) {
+                this.state = app.chat.getViewportState(this.model);
+                this.loadChat();
+            }
+            app.chat.flashItem($('.wrapper'));
+        }
+    }
+
+    loadChat() {
+        if (!this.state) return;
+
+        const oldScroll = this.state.scroll.oldScroll;
+        this.reloadMessages();
+        m.redraw();
+
+        setTimeout(() => {
+            const wrapper = this.getChatWrapper();
+            if (!wrapper) return;
+            wrapper.scrollTop = wrapper.scrollHeight - wrapper.clientHeight - oldScroll;
+        }, 200);
+    }
+
+    view(vnode) {
+        const v2 = this.attrs.presentationVersion === 2;
+        if (this.model) {
+            return (
+                <div className={'ChatViewport' + (v2 ? ' ChatViewport--messagesV2' : '')}>
+                    <div
+                        className={'wrapper' + (v2 ? ' MessagesMessageViewport' : '')}
+                        oncreate={this.wrapperOnCreate.bind(this)}
+                        onbeforeupdate={this.wrapperOnBeforeUpdate.bind(this)}
+                        onupdate={this.wrapperOnUpdate.bind(this)}
+                        onremove={this.wrapperOnRemove.bind(this)}
+                    >
+                        {this.componentLoader(this.state.scroll.loading)}
+                        {this.componentsChatMessages(this.model)}
+                    </div>
+                    <ChatInput
+                        state={this.state}
+                        model={this.model}
+                        oninput={() => {
+                            if (this.nearBottom() && !this.state.messageEditing) {
+                                this.scrollToBottom();
+                            }
+                        }}
+                    ></ChatInput>
+                    {this.isFastScrollAvailable() ? this.componentScroller() : null}
+                </div>
+            );
+        }
+
+        return (
+            <div className={'ChatViewport' + (v2 ? ' ChatViewport--messagesV2' : '')}>
+                <ChatWelcome />;
+            </div>
+        );
+    }
+
+    componentChatMessage(model) {
+        const presentationVersion = this.attrs.presentationVersion;
+        return model.type() ? (
+            <ChatEventMessage key={model.id()} model={model} presentationVersion={presentationVersion} />
+        ) : (
+            <ChatMessage key={model.id()} model={model} presentationVersion={presentationVersion} />
+        );
+    }
+
+    componentsChatMessages(chat) {
+        const messages = app.chat.getChatMessages().slice();
+
+        // Include optimistic writing preview in the same ordered collection so V2 grouping
+        // can attach it to the latest same-author group within the gap window.
+        if (this.state.input.writingPreview && this.state.input.previewModel) {
+            messages.push(this.state.input.previewModel);
+        }
+
+        if (this.attrs.presentationVersion === 2) {
+            return this.componentsChatMessageGroups(messages);
+        }
+
+        return messages.map((model) => this.componentChatMessage(model));
+    }
+
+    /**
+     * Messages V2: render presentation groups (identity once) + event breakers.
+     * FORUM-MESSAGING-008UI
+     */
+    componentsChatMessageGroups(messages) {
+        const presentationVersion = 2;
+        return groupChatMessages(messages, { sessionUser: app.session.user }).map((item) => {
+            if (item.kind === 'event') {
+                return <ChatEventMessage key={item.key} model={item.model} presentationVersion={presentationVersion} />;
+            }
+
+            return <ChatMessageGroup key={item.key} group={item} presentationVersion={presentationVersion} />;
+        });
+    }
+
+    hasNewMessageState() {
+        return !!(this.state.newPushedPosts || (this.model && this.model.unreaded && this.model.unreaded() > 0));
+    }
+
+    componentScroller() {
+        const label = this.hasNewMessageState()
+            ? app.translator.trans('flatrate-live-chat.forum.live_chats.new_messages')
+            : app.translator.trans('flatrate-live-chat.forum.live_chats.jump_latest');
+
+        return (
+            <button type="button" className="scroller ChatViewport-scroller" onclick={this.fastScroll.bind(this)}>
+                <span className="ChatViewport-scrollerLabel">{label}</span>
+                <i class="fas fa-angle-down"></i>
+            </button>
+        );
+    }
+
+    componentLoader(watch) {
+        return watch ? (
+            <msgloader className="message-wrapper--loading">
+                <LoadingIndicator className="loading-old Button-icon" />
+            </msgloader>
+        ) : null;
+    }
+    getChatWrapper() {
+        if (this.scrollElement) {
+            return this.scrollElement;
+        }
+        return this.element?.querySelector('.wrapper') ?? document.querySelector('.ChatViewport .wrapper');
+    }
+
+    isFastScrollAvailable() {
+        if (this.nearBottom()) return false;
+        if (this.hasNewMessageState()) return true;
+        let chatWrapper = this.getChatWrapper();
+        return !!(chatWrapper && chatWrapper.scrollHeight > 2000 && chatWrapper.scrollTop < chatWrapper.scrollHeight - 2000);
+    }
+
+    fastScroll(e) {
+        if (this.model.unreaded() >= 30) this.fastMessagesFetch(e);
+        else {
+            let chatWrapper = this.getChatWrapper();
+            chatWrapper.scrollTop = Math.max(chatWrapper.scrollTop, chatWrapper.scrollHeight - 3000);
+            this.scrollToBottom();
+        }
+    }
+
+    fastMessagesFetch(e) {
+        e.redraw = false;
+        app.chat.chatmessages = [];
+
+        app.chat.apiFetchChatMessages(this.model).then((r) => {
+            this.scrollToBottom();
+            timedRedraw(300);
+
+            this.model.pushAttributes({ unreaded: 0 });
+            let message = app.chat.getChatMessages((mdl) => mdl.chat() == this.model).slice(-1)[0];
+            app.chat.apiReadChat(this.model, message);
+        });
+    }
+
+    wrapperOnCreate(vnode) {
+        super.oncreate(vnode);
+        this.wrapperOnUpdate(vnode);
+
+        this.scrollElement = vnode.dom;
+        this.boundScrollListener = this.wrapperOnScroll.bind(this);
+        this.scrollElement.addEventListener('scroll', this.boundScrollListener, { passive: true });
+    }
+
+    wrapperOnBeforeUpdate(vnode, vnodeNew) {
+        super.onbeforeupdate(vnode, vnodeNew);
+        if (!this.state.autoScroll && this.nearBottom() && this.state.newPushedPosts) {
+            this.scrollAfterUpdate = true;
+        }
+    }
+
+    wrapperOnUpdate(vnode) {
+        super.onupdate(vnode);
+        let el = vnode.dom;
+        if (this.model && this.state.scroll.autoScroll) {
+            if (this.autoScrollTimeout) clearTimeout(this.autoScrollTimeout);
+            this.autoScrollTimeout = setTimeout(this.scrollToBottom.bind(this, true), 100);
+        }
+        if (el.scrollTop <= 0) el.scrollTop = 1;
+        this.checkUnreaded();
+
+        if (this.scrollAfterUpdate) {
+            this.scrollAfterUpdate = false;
+            this.scrollToBottom();
+        }
+    }
+
+    wrapperOnRemove(vnode) {
+        super.onremove(vnode);
+        if (this.scrollElement && this.boundScrollListener) {
+            this.scrollElement.removeEventListener('scroll', this.boundScrollListener);
+        }
+        this.scrollElement = null;
+        this.boundScrollListener = null;
+    }
+
+    wrapperOnScroll(e) {
+        const el = e?.currentTarget || this.getChatWrapper();
+        if (!el) return;
+
+        this.state.scroll.oldScroll = el.scrollHeight - el.clientHeight - el.scrollTop;
+
+        this.checkUnreaded();
+
+        if (this.lastFastScrollStatus != this.isFastScrollAvailable()) {
+            this.lastFastScrollStatus = this.isFastScrollAvailable();
+            m.redraw();
+        }
+
+        let currentHeight = el.scrollHeight;
+
+        if (this.atBottom()) {
+            this.state.newPushedPosts = false;
+        }
+
+        if (this.state.scroll.autoScroll || this.state.loading || this.scrolling) return;
+
+        if (!this.state.messageEditing && el.scrollTop >= 0) {
+            if (el.scrollTop <= 500) {
+                let topMessage = app.chat.getChatMessages((model) => model.chat() == this.model)[0];
+                if (topMessage && topMessage != this.model.first_message()) {
+                    app.chat.apiFetchChatMessages(this.model, topMessage.created_at().toISOString());
+                }
+            } else if (el.scrollTop + el.clientHeight >= currentHeight - 500) {
+                let bottomMessage = app.chat.getChatMessages((model) => model.chat() == this.model).slice(-1)[0];
+                if (bottomMessage && bottomMessage != this.model.last_message()) {
+                    app.chat.apiFetchChatMessages(this.model, bottomMessage.created_at().toISOString());
+                }
+            }
+        }
+    }
+
+    checkUnreaded() {
+        if (!this.model || !this.model.unreaded()) {
+            return;
+        }
+
+        const wrapper = this.getChatWrapper();
+        const result = processVisibleUnread({
+            wrapper,
+            model: this.model,
+            currentChat: app.chat.getCurrentChat(),
+            messages: app.chat.getChatMessages((mdl) => mdl.chat() == this.model && mdl.created_at() >= this.model.readed_at() && !mdl.isReaded),
+            autoScroll: !!this.state.scroll.autoScroll,
+            apiReadChat: app.chat.apiReadChat.bind(app.chat),
+            findMessageEl: (id) => document.querySelector(`.message-wrapper[data-id="${id}"`),
+        });
+
+        if (result.processed > 0) {
+            m.redraw();
+        }
+    }
+
+    scrollToAnchor(anchor) {
+        let element;
+        if (anchor instanceof Message) element = $(`.message-wrapper[data-id="${anchor.id()}"`)[0];
+        else element = anchor;
+
+        let chatWrapper = this.getChatWrapper();
+        if (chatWrapper && element)
+            $(chatWrapper)
+                .stop()
+                .animate({ scrollTop: element.offsetTop - element.offsetHeight }, 500);
+        else setTimeout(scroll, 100);
+    }
+
+    scrollToBottom(force = false) {
+        this.scrolling = true;
+        let chatWrapper = this.getChatWrapper();
+        if (chatWrapper) {
+            const notAtBottom = !force && this.atBottom();
+            const fewMessages = chatWrapper.scrollHeight <= chatWrapper.clientHeight + 200;
+            if (notAtBottom || fewMessages) return;
+
+            // V2 Messages: instant jump (no long animated scroll).
+            if (this.attrs.presentationVersion === 2) {
+                chatWrapper.scrollTop = chatWrapper.scrollHeight;
+                this.state.scroll.autoScroll = false;
+                this.scrolling = false;
+                return;
+            }
+
+            const time = this.pixelsFromBottom() < 80 ? 0 : 250;
+
+            $(chatWrapper)
+                .stop()
+                .animate({ scrollTop: chatWrapper.scrollHeight }, time, 'swing', () => {
+                    this.state.scroll.autoScroll = false;
+                    this.scrolling = false;
+                });
+        }
+    }
+
+    reloadMessages() {
+        const model = this.model;
+        const state = this.state;
+        if (!model || !state) {
+            return;
+        }
+
+        if (!startInitialHistoryFetch(state)) {
+            return;
+        }
+
+        let query;
+        if (model.unreaded()) {
+            query = model.readed_at()?.toISOString() ?? new Date(0).toISOString();
+            state.scroll.autoScroll = false;
+        }
+
+        const pending = app.chat.apiFetchChatMessages(model, query);
+        if (!pending || typeof pending.then !== 'function') {
+            settleInitialHistoryFetch(state, { ok: false });
+            return;
+        }
+
+        pending.then(
+            () => {
+                settleInitialHistoryFetch(state, { ok: true });
+                if (this.model !== model || this.state !== state) {
+                    return;
+                }
+
+                if (model.unreaded()) {
+                    const anchor = app.chat.getChatMessages((mdl) => mdl.chat() == model && mdl.created_at() > model.readed_at())[0];
+                    this.scrollToAnchor(anchor);
+                } else {
+                    state.scroll.autoScroll = true;
+                }
+
+                m.redraw();
+            },
+            () => {
+                settleInitialHistoryFetch(state, { ok: false });
+            }
+        );
+    }
+
+    nearBottom() {
+        const threshold = this.attrs.presentationVersion === 2 ? 100 : 500;
+        return this.pixelsFromBottom() <= threshold;
+    }
+
+    atBottom() {
+        return this.pixelsFromBottom() <= 5;
+    }
+
+    pixelsFromBottom() {
+        const element = this.getChatWrapper();
+        if (!element) return Number.POSITIVE_INFINITY;
+        return Math.abs(element.scrollHeight - element.scrollTop - element.clientHeight);
+    }
+}
